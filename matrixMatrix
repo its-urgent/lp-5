@@ -34,21 +34,28 @@ int main()
 
     int (*d_A)[N], (*d_B)[N], (*d_C)[N];
 
+    // Allocate memory on GPU
     cudaMalloc((void**)&d_A, sizeof(int) * N * N);
     cudaMalloc((void**)&d_B, sizeof(int) * N * N);
     cudaMalloc((void**)&d_C, sizeof(int) * N * N);
 
+    // Copy matrices from CPU to GPU
     cudaMemcpy(d_A, A, sizeof(int) * N * N, cudaMemcpyHostToDevice);
     cudaMemcpy(d_B, B, sizeof(int) * N * N, cudaMemcpyHostToDevice);
 
+    // Define thread block
     dim3 threadsPerBlock(N, N);
 
+    // Launch kernel
     matrixMul<<<1, threadsPerBlock>>>(d_A, d_B, d_C);
 
+    // Wait for GPU execution
     cudaDeviceSynchronize();
 
+    // Copy result back to CPU
     cudaMemcpy(C, d_C, sizeof(int) * N * N, cudaMemcpyDeviceToHost);
 
+    // Print result matrix
     printf("Result Matrix:\n");
 
     for (int i = 0; i < N; i++)
@@ -61,6 +68,7 @@ int main()
         printf("\n");
     }
 
+    // Free GPU memory
     cudaFree(d_A);
     cudaFree(d_B);
     cudaFree(d_C);
