@@ -1,0 +1,134 @@
+#include <iostream>
+#include <queue>
+#include <omp.h>
+
+using namespace std;
+
+class Node
+{
+public:
+    int data;
+    Node *left;
+    Node *right;
+};
+
+class BFS
+{
+public:
+    Node* insert(Node *root, int data);
+    void bfs(Node *root);
+};
+
+Node* BFS::insert(Node *root, int data)
+{
+    if (root == NULL)
+    {
+        root = new Node();
+        root->data = data;
+        root->left = root->right = NULL;
+
+        return root;
+    }
+
+    queue<Node*> q;
+    q.push(root);
+
+    while (!q.empty())
+    {
+        Node *temp = q.front();
+        q.pop();
+
+        if (temp->left == NULL)
+        {
+            temp->left = new Node();
+            temp->left->data = data;
+            temp->left->left = temp->left->right = NULL;
+
+            return root;
+        }
+        else
+        {
+            q.push(temp->left);
+        }
+
+        if (temp->right == NULL)
+        {
+            temp->right = new Node();
+            temp->right->data = data;
+            temp->right->left = temp->right->right = NULL;
+
+            return root;
+        }
+        else
+        {
+            q.push(temp->right);
+        }
+    }
+
+    return root;
+}
+
+void BFS::bfs(Node *root)
+{
+    if (root == NULL)
+        return;
+
+    queue<Node*> q;
+    q.push(root);
+
+    cout << "\nBFS Traversal:\n";
+
+    while (!q.empty())
+    {
+        int size = q.size();
+
+        #pragma omp parallel for
+        for (int i = 0; i < size; i++)
+        {
+            Node *curr;
+
+            #pragma omp critical
+            {
+                curr = q.front();
+                q.pop();
+
+                cout << curr->data << " ";
+            }
+
+            #pragma omp critical
+            {
+                if (curr->left)
+                    q.push(curr->left);
+
+                if (curr->right)
+                    q.push(curr->right);
+            }
+        }
+    }
+}
+
+int main()
+{
+    BFS b;
+
+    Node *root = NULL;
+
+    int data;
+    char ch;
+
+    do
+    {
+        cout << "\nEnter data: ";
+        cin >> data;
+
+        root = b.insert(root, data);
+
+        cout << "Add another node? (y/n): ";
+        cin >> ch;
+
+    } while (ch == 'y' || ch == 'Y');
+
+    b.bfs(root);
+
+    return 0;
+}
